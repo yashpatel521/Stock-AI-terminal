@@ -1,0 +1,260 @@
+📊 Stock AI Research Terminal (Open Source)
+🧠 Core Idea
+
+You are building a lightweight, real-time AI-powered stock research terminal that helps users understand stocks using:
+
+📈 Live market data (Finnhub WebSocket)
+📰 Latest news (Finnhub REST)
+🤖 AI analysis (Gemini)
+💾 Local storage (SQLite + Drizzle ORM)
+⚡ Fast UI state (Zustand)
+
+The goal is NOT to predict the market.
+
+The goal is:
+
+Help users understand what is happening in a stock and what a reasonable trade plan could look like.
+
+🎯 Problem It Solves
+
+Most beginner traders:
+
+Don’t understand charts or indicators
+Get overwhelmed by financial news
+Don’t know when to enter/exit trades
+Rely on random tips or social media
+Have no structured decision-making system
+
+This project solves that by turning raw data into:
+
+📌 Simple, structured, human-readable trading research
+
+🧩 Core User Flow
+1. Watchlist First
+
+User opens the app and adds stocks:
+
+AAPL
+TSLA
+NVDA
+MSFT
+
+Each stock shows:
+
+Live price (WebSocket)
+Daily change %
+Quick snapshot
+2. Stock Detail Page
+
+When user clicks a stock:
+
+They see a full dashboard:
+
+📊 Market Overview
+Current price (live)
+Day high / low
+Volume
+52-week range
+📈 Chart Section
+Historical candlestick chart (Finnhub REST data)
+📰 News Section
+Latest company news
+Headlines + timestamps
+3. AI Analysis Button
+
+User clicks:
+
+“Analyze Stock”
+
+This triggers the core engine:
+
+Backend Flow:
+Fetch Finnhub data:
+Price
+Candles (30–90 days)
+News
+Company profile
+Format data into structured prompt
+Send to Gemini API
+Receive structured JSON response
+Store result in SQLite (optional history)
+Return to frontend
+4. AI Output (Simple & Structured)
+
+Instead of complex trading jargon, the AI returns:
+
+📊 Trend (bullish / bearish / sideways)
+🎯 Entry zone (range, not exact price)
+🏁 Target zone
+🛑 Stop loss
+⚖️ Risk level
+📈 Confidence score (0–100)
+🧠 Explanation in simple English
+
+Example:
+
+Apple is showing steady upward momentum with strong earnings support. Price is currently near support, which may provide a good entry opportunity.
+
+⚡ Real-Time Engine (WebSocket Layer)
+
+This is what makes your app feel “alive”.
+
+How it works:
+Finnhub WebSocket streams live trades
+App subscribes only to:
+Watchlist symbols
+Currently open stock page
+Result:
+Live price updates every few milliseconds
+UI updates instantly
+Green/red flash animations
+Real-time % change
+
+This turns your app into a:
+
+📡 Live trading terminal experience
+
+🏗 System Architecture
+Frontend (Next.js + Tailwind)
+
+Handles:
+
+UI rendering
+Stock pages
+Watchlist
+AI results display
+WebSocket UI updates
+Backend (Next.js API routes)
+
+Handles:
+
+Finnhub API requests
+Gemini AI requests
+Data formatting
+Database writes
+Database (SQLite + Drizzle ORM)
+
+Stores:
+
+Watchlist symbols
+AI analysis history
+Cached prices (optional)
+
+No server required → fully portable.
+
+State Management (Zustand)
+
+Handles:
+
+Watchlist state
+Live prices
+UI state
+Selected stock
+
+No Redux, no complexity.
+
+🧠 AI Engine (Gemini)
+
+Gemini is used ONLY for:
+
+Interpreting structured market data
+Generating explanations
+Producing trade ideas (not predictions)
+Summarizing news impact
+Input includes:
+Price data
+Candle history
+News
+Basic indicators (optional)
+Output:
+
+Strict JSON format for frontend rendering.
+
+📦 Key Features
+🔥 MVP Features
+Watchlist system
+Stock detail page
+Finnhub live price (WebSocket)
+News integration
+AI analysis button (Gemini)
+Clean structured trade report
+📈 Phase 2 Features
+Save analysis history
+Portfolio tracking
+Alerts (price / AI score)
+Better chart integration
+Performance tracking
+🚀 Advanced Features (future)
+Paper trading system
+Backtesting engine
+Strategy comparison
+AI chat assistant
+Multi-asset support (crypto, forex)
+🧱 Technical Design Philosophy
+
+This project follows 5 core principles:
+
+1. Lightweight First
+SQLite instead of heavy DB
+Zustand instead of Redux
+Minimal dependencies
+2. Data-Driven AI
+
+AI never sees raw chaos.
+
+It receives:
+
+clean structured financial data
+
+3. Separation of Concerns
+Finnhub → data only
+Gemini → reasoning only
+Frontend → display only
+4. Real-Time UX
+
+WebSocket makes the app feel like a trading terminal.
+
+5. Explainability
+
+Every AI output must include:
+
+“WHY this recommendation exists”
+
+Not just:
+
+“Buy / Sell”
+
+📊 Why This Project Is Strong
+As Open Source:
+Easy to run locally
+No complex infrastructure
+Useful learning project
+Extensible architecture
+As a Product Idea:
+Clear value: “stock research assistant”
+Not overpromising predictions
+Can later become SaaS
+As a Portfolio Project:
+Shows:
+full-stack ability
+AI integration
+real-time systems
+database design
+system architecture thinking
+⚠️ Important Reality Check
+
+This system:
+
+❌ does NOT predict markets
+❌ does NOT guarantee profits
+❌ is NOT a trading bot
+
+It is:
+
+🧠 A structured AI research assistant for trading decisions
+
+🧭 Final Vision
+
+If executed properly, this becomes:
+
+A lightweight TradingView-like terminal combined with an AI financial analyst that explains market behavior in simple language.

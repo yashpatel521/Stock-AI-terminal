@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-panel: var(--panel-bg);
+  --color-border-custom: var(--panel-border);
+  --color-hover-custom: var(--hover-bg);
+  --color-muted-custom: var(--text-muted);
+  --color-green-custom: var(--accent-green);
+  --color-red-custom: var(--accent-red);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #F9FAFB;
+  --foreground: #111827;
+  --panel-bg: #FFFFFF;
+  --panel-border: #E5E7EB;
+  --hover-bg: #F3F4F6;
+  --accent-green: #00B074;
+  --accent-red: #DF2E38;
+  --text-muted: #6B7280;
+  
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-outfit), sans-serif;
+}
+
+.dark {
+  --background: #0D0F14;
+  --foreground: #F3F4F6;
+  --panel-bg: #151821;
+  --panel-border: #222632;
+  --hover-bg: #1E222D;
+  --accent-green: #089981;
+  --accent-red: #F23645;
+  --text-muted: #848E9C;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+}
+
+/* Keyframe animations for real-time price flashing */
+@keyframes flash-green {
+  0% {
+    background-color: rgba(8, 153, 129, 0.25);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-red {
+  0% {
+    background-color: rgba(242, 54, 69, 0.25);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.flash-green-bg {
+  animation: flash-green 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.flash-red-bg {
+  animation: flash-red 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
