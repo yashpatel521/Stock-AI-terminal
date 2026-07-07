@@ -3,37 +3,33 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStockStore } from '@/store/useStockStore';
-import { Sparkles, Brain, Clock, ChevronRight, HelpCircle, ArrowUpRight, AlertTriangle, Play } from 'lucide-react';
+import { 
+  Sparkles, Brain, Clock, ChevronRight, ArrowUpRight, 
+  AlertTriangle, Play, Zap, TrendingUp, TrendingDown,
+  Loader2, Info
+} from 'lucide-react';
 
 export default function AIRecommendations() {
   const router = useRouter();
   const { addSymbol, setSelectedSymbol } = useStockStore();
   
-  // Section Navigation Tab
   const [ideasTab, setIdeasTab] = useState<'scans' | 'individuals'>('scans');
-
-  // Individual Tickers History
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
-
-  // Macro Scans State
   const [scans, setScans] = useState<any[]>([]);
   const [activeScan, setActiveScan] = useState<any>(null);
   const [loadingScan, setLoadingScan] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [loadingScansHistory, setLoadingScansHistory] = useState(true);
 
-  // Fetch data on mount
   useEffect(() => {
     async function fetchIndividualHistory() {
       try {
         const res = await fetch('/api/analyze');
         const data = await res.json();
-        if (data.success && data.history) {
-          setHistory(data.history);
-        }
+        if (data.success && data.history) setHistory(data.history);
       } catch (err) {
-        console.error('Failed to fetch analysis history:', err);
+        console.error(err);
       } finally {
         setLoadingHistory(false);
       }
@@ -45,12 +41,10 @@ export default function AIRecommendations() {
         const data = await res.json();
         if (data.success && data.scans) {
           setScans(data.scans);
-          if (data.scans.length > 0) {
-            setActiveScan(data.scans[0]);
-          }
+          if (data.scans.length > 0) setActiveScan(data.scans[0]);
         }
       } catch (err) {
-        console.error('Failed to fetch scans:', err);
+        console.error(err);
       } finally {
         setLoadingScansHistory(false);
       }
@@ -70,17 +64,17 @@ export default function AIRecommendations() {
         setScans((prev) => [data.scan, ...prev]);
         setActiveScan(data.scan);
       } else {
-        setScanError(data.error || 'Failed to complete market scan. Please verify Gemini API key.');
+        setScanError(data.error || 'Failed to complete market scan.');
       }
     } catch (err: any) {
-      console.error(err);
-      setScanError(err.message || 'An unexpected error occurred during macro scan.');
+      setScanError(err.message || 'An unexpected error occurred.');
     } finally {
       setLoadingScan(false);
     }
   };
 
-  const handleTrackStock = (symbol: string) => {
+  const handleTrackStock = (e: React.MouseEvent, symbol: string) => {
+    e.stopPropagation();
     addSymbol(symbol);
     setSelectedSymbol(symbol);
     router.push(`/stock/${symbol}`);
@@ -92,421 +86,349 @@ export default function AIRecommendations() {
   };
 
   const parseScanResults = (scan: any) => {
-    if (!scan || !scan.results) return [];
-    try {
-      return JSON.parse(scan.results);
-    } catch (err) {
-      console.error('Error parsing scan results:', err);
-      return [];
-    }
+    if (!scan?.results) return [];
+    try { return JSON.parse(scan.results); } 
+    catch { return []; }
   };
 
   const activeScanRows = parseScanResults(activeScan);
 
-
-
   return (
-    <div className="flex-1 p-6 bg-background overflow-y-auto h-full space-y-6 select-none animate-fade-in">
+    <div className="flex-1 p-6 bg-background overflow-y-auto h-full space-y-5 select-none animate-fade-in">
       
-      {/* Title Header */}
-      <div className="flex items-center justify-between border-b border-border-custom pb-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 dark:text-purple-400 border border-purple-500/25">
-            <Sparkles className="h-4.5 w-4.5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-foreground font-display tracking-tight">AI Recommendations</h2>
-            <p className="text-xs text-muted-custom">Hedge-fund level stock scans and detailed dynamic trade reports</p>
-          </div>
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-extrabold text-foreground font-display tracking-tight">AI Scanner</h2>
+          <p className="text-[11px] text-muted-custom mt-0.5">Institutional-grade research engine powered by Gemini</p>
         </div>
-        <span className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-1 rounded-lg border border-purple-500/20 font-bold tracking-wider uppercase font-display">
-          AI Engine Online
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2 mr-1">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+          </span>
+          <span className="text-[10px] text-muted-custom font-semibold">Online</span>
+        </div>
       </div>
 
-      {/* Ideas Page Sub-Tabs Switcher */}
-      <div className="flex items-center gap-4 border-b border-border-custom/50 pb-2 mb-4 shrink-0">
+      {/* Tab Switcher — pill style */}
+      <div className="flex items-center gap-1.5 bg-panel border border-border-custom rounded-xl p-1 w-fit">
         <button
           onClick={() => setIdeasTab('scans')}
-          className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 pb-2 cursor-pointer transition-all border-b-2 font-display ${
+          className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
             ideasTab === 'scans'
-              ? 'text-foreground border-purple-600'
-              : 'text-muted-custom border-transparent hover:text-foreground'
+              ? 'bg-foreground text-background shadow-sm'
+              : 'text-muted-custom hover:text-foreground'
           }`}
         >
-          <Sparkles className="h-4 w-4" /> Global AI Market Scan (/stockreport)
+          <Zap className="h-3.5 w-3.5" /> Market Scan
         </button>
         <button
           onClick={() => setIdeasTab('individuals')}
-          className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 pb-2 cursor-pointer transition-all border-b-2 font-display ${
+          className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
             ideasTab === 'individuals'
-              ? 'text-foreground border-purple-600'
-              : 'text-muted-custom border-transparent hover:text-foreground'
+              ? 'bg-foreground text-background shadow-sm'
+              : 'text-muted-custom hover:text-foreground'
           }`}
         >
-          <Clock className="h-4 w-4" /> Individual Ticker Reports
+          <Clock className="h-3.5 w-3.5" /> Ticker Reports
         </button>
       </div>
 
       {ideasTab === 'scans' ? (
-        /* TAB 1: Global AI scans (/stockreport) */
-        <div className="space-y-6">
+        /* ──────── TAB 1: Global AI Market Scan ──────── */
+        <div className="space-y-5">
           
-          {/* Scan Action Row */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-panel border border-border-custom rounded-2xl p-5 shadow-sm">
-            <div>
-              <h3 className="text-sm font-bold text-foreground font-display">Run Global Institutional Scan</h3>
-              <p className="text-xs text-muted-custom mt-0.5">Executes the /stockreport macro prompt analyzing macro indicators, CPI, and technicals</p>
-            </div>
-            
-            <button
-              onClick={handleRunGlobalScan}
-              disabled={loadingScan}
-              className="px-4 py-2.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 rounded-xl transition-all cursor-pointer select-none active:scale-95 shadow-sm shrink-0"
-            >
-              {loadingScan ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Scanning Markets...
-                </>
-              ) : (
-                <>
-                  <Play className="h-3.5 w-3.5 fill-current" /> Run Scan (/stockreport)
-                </>
-              )}
-            </button>
-          </div>
-
-          {loadingScan && (
-            <div className="bg-panel border border-border-custom rounded-2xl p-16 text-center flex flex-col items-center justify-center">
-              <Loader2 className="h-10 w-10 text-purple-600 dark:text-purple-400 animate-spin mb-4" />
-              <h4 className="text-sm font-bold text-foreground font-display uppercase tracking-wider">Hedge Fund Research Active</h4>
-              <p className="text-xs text-muted-custom max-w-sm mt-1.5 leading-relaxed">
-                Gemini is executing macro analysis calculations, sentiment checks, options flow monitoring, and CPI rotation indexing.
-              </p>
-            </div>
-          )}
-
-          {scanError && (
-            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/80 rounded-2xl text-red-800 dark:text-red-200 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-xs font-bold uppercase mb-1 font-display">Scan Execution Failed</h4>
-                <p className="text-[11px] leading-relaxed">{scanError}</p>
-              </div>
-            </div>
-          )}
-
-          {!loadingScan && (
-            loadingScansHistory ? (
-              <div className="bg-panel border border-border-custom rounded-2xl p-10 flex items-center justify-center">
-                <span className="text-xs text-muted-custom">Loading macro scans database...</span>
-              </div>
-            ) : scans.length === 0 ? (
-              /* Scans Empty State */
-              <div className="bg-panel border border-border-custom rounded-2xl p-10 text-center max-w-lg mx-auto shadow-sm">
-                <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center mx-auto mb-4 border border-border-custom">
+          {/* Scan Trigger Card */}
+          <div className="bg-panel border border-border-custom rounded-2xl overflow-hidden shadow-sm">
+            <div className="p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
                   <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h3 className="text-sm font-bold text-foreground mb-1.5 font-display uppercase tracking-wider">No Macro Scans Found</h3>
-                <p className="text-xs text-muted-custom leading-relaxed mb-4">
-                  Trigger the institutional scanning engine above to process current market indicators and identify the 5 best opportunities today.
+                <div>
+                  <h3 className="text-sm font-bold text-foreground font-display">Run /stockreport</h3>
+                  <p className="text-[11px] text-muted-custom mt-0.5">Scans macro, CPI, technicals, options flow, and sector rotation to find today's top 5 trades</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleRunGlobalScan}
+                disabled={loadingScan}
+                className="px-5 py-2.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 font-bold text-xs flex items-center gap-2 rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm shrink-0"
+              >
+                {loadingScan ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Scanning...</>
+                ) : (
+                  <><Play className="h-3.5 w-3.5 fill-current" /> Execute Scan</>
+                )}
+              </button>
+            </div>
+
+            {/* Loading State */}
+            {loadingScan && (
+              <div className="border-t border-border-custom p-12 text-center">
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-purple-500/10 mb-4">
+                  <Loader2 className="h-8 w-8 text-purple-600 dark:text-purple-400 animate-spin" />
+                </div>
+                <h4 className="text-sm font-bold text-foreground font-display">Analyzing Global Markets</h4>
+                <p className="text-[11px] text-muted-custom max-w-sm mx-auto mt-1.5 leading-relaxed">
+                  Gemini is processing macro indicators, sentiment data, technical patterns, and institutional flow...
                 </p>
-              </div>
-            ) : (
-              /* Active Scan Table */
-              <div className="space-y-4">
-                
-                {/* Selector Header */}
-                <div className="flex items-center justify-between pb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground font-display uppercase tracking-wider">Selected Report</span>
-                    <select
-                      value={activeScan?.id || ''}
-                      onChange={(e) => {
-                        const target = scans.find(s => s.id === Number(e.target.value));
-                        if (target) setActiveScan(target);
-                      }}
-                      className="px-3 py-1.5 bg-panel border border-border-custom rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:border-purple-500"
-                    >
-                      {scans.map(s => (
-                        <option key={s.id} value={s.id}>
-                          Scan Result - {new Date(s.createdAt).toLocaleString()}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <span className="text-[10px] text-muted-custom font-semibold">
-                    Scan ID: #{activeScan?.id}
-                  </span>
-                </div>
-
-                {/* Scans Result Table */}
-                <div className="bg-panel border border-border-custom rounded-2xl overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-border-custom text-[10px] uppercase font-bold text-muted-custom bg-background font-display tracking-wider">
-                          <th className="py-4 px-6 text-center">Rank</th>
-                          <th className="py-4 px-6">Stock</th>
-                          <th className="py-4 px-6 text-center">Bias</th>
-                          <th className="py-4 px-6 text-right">Expected Day (L / H)</th>
-                          <th className="py-4 px-6 text-right">Expected Week (L / H)</th>
-                          <th className="py-4 px-6 text-center">Confidence</th>
-                          <th className="py-4 px-6 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border-custom/50 text-xs">
-                        {activeScanRows.map((row: any) => {
-                          const isBullish = row.bias === 'bullish';
-                          return (
-                            <tr
-                              key={row.rank}
-                              onClick={() => handleRowClick(row.symbol)}
-                              className="hover:bg-hover-custom cursor-pointer transition-colors duration-150 group"
-                            >
-                              {/* Rank */}
-                              <td className="py-4 px-6 text-center font-bold text-foreground">
-                                {row.rank}
-                              </td>
-
-                              {/* Ticker Ticker */}
-                              <td className="py-4 px-6">
-                                <span className="font-extrabold text-foreground text-sm tracking-wider font-display uppercase">{row.symbol}</span>
-                              </td>
-
-                              {/* Bias */}
-                              <td className="py-4 px-6 text-center">
-                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-lg capitalize ${
-                                  isBullish ? 'bg-green-custom/10 text-green-custom border border-green-custom/20' :
-                                  'bg-red-custom/10 text-red-custom border border-red-custom/20'
-                                }`}>
-                                  {row.bias}
-                                </span>
-                              </td>
-
-                              {/* Expected Day Range */}
-                              <td className="py-4 px-6 text-right font-mono font-bold text-muted-custom text-[11px]">
-                                <span className="text-red-custom">{row.dayLow}</span>
-                                <span className="mx-1.5 text-border-custom">/</span>
-                                <span className="text-green-custom">{row.dayHigh}</span>
-                              </td>
-
-                              {/* Expected Week Range */}
-                              <td className="py-4 px-6 text-right font-mono font-bold text-muted-custom text-[11px]">
-                                <span className="text-red-custom">{row.weekLow}</span>
-                                <span className="mx-1.5 text-border-custom">/</span>
-                                <span className="text-green-custom">{row.weekHigh}</span>
-                              </td>
-
-                              {/* Confidence score */}
-                              <td className="py-4 px-6 text-center">
-                                <div className="flex flex-col items-center">
-                                  <span className="font-mono font-bold text-foreground text-[11px]">{row.confidence}%</span>
-                                  <div className="w-16 h-1 bg-hover-custom rounded-full mt-1.5 overflow-hidden">
-                                    <div 
-                                      className="h-full bg-purple-600 dark:bg-purple-500" 
-                                      style={{ width: `${row.confidence}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-
-                              {/* Action track in watchlist */}
-                              <td className="py-4 px-6 text-center">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTrackStock(row.symbol);
-                                  }}
-                                  className="px-2.5 py-1 bg-background hover:bg-green-custom text-muted-custom hover:text-white rounded-lg border border-border-custom hover:border-transparent font-bold text-[10px] transition-colors cursor-pointer"
-                                >
-                                  Track Ticker
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-              </div>
-            )
-          )}
-
-        </div>
-      ) : (
-        /* TAB 2: Individual Tickers Reports */
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-foreground flex items-center gap-2 font-display uppercase tracking-wider">
-              <Clock className="h-4 w-4 text-muted-custom" /> Your Generated Ticker Reports
-            </h3>
-
-            {loadingHistory ? (
-              <div className="bg-panel border border-border-custom rounded-2xl p-10 flex items-center justify-center shadow-sm">
-                <span className="text-xs text-muted-custom">Querying database records...</span>
-              </div>
-            ) : history.length === 0 ? (
-              <div className="bg-panel border border-border-custom rounded-2xl p-8 text-center max-w-lg mx-auto shadow-sm">
-                <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center mx-auto mb-3 border border-border-custom">
-                  <Brain className="h-5 w-5 text-purple-500 dark:text-purple-400" />
-                </div>
-                <h4 className="text-xs font-bold text-foreground mb-1.5 font-display uppercase tracking-wider">No Reports Generated Yet</h4>
-                <p className="text-xs text-muted-custom leading-relaxed mb-4">
-                  To populate this table, go to your Stock Watchlist, click the analyze trigger on any ticker, and Gemini will compile structured trade setups here.
-                </p>
-                <button
-                  onClick={() => router.push('/stock')}
-                  className="px-3.5 py-1.5 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
-                >
-                  Go to Watchlist
-                </button>
-              </div>
-            ) : (
-              <div className="bg-panel border border-border-custom rounded-2xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-border-custom text-[10px] uppercase font-bold text-muted-custom bg-background font-display tracking-wider">
-                        <th className="py-4 px-6">Timestamp</th>
-                        <th className="py-4 px-6">Symbol</th>
-                        <th className="py-4 px-6 text-center">Trend Outlook</th>
-                        <th className="py-4 px-6 text-center">Targets (Entry / TP / SL)</th>
-                        <th className="py-4 px-6 text-center">Risk</th>
-                        <th className="py-4 px-6 text-center">Confidence</th>
-                        <th className="py-4 px-6 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-custom/50 text-xs">
-                      {history.map((item) => {
-                        const isPositiveTrend = item.trend === 'bullish';
-                        const isNegativeTrend = item.trend === 'bearish';
-                        return (
-                          <tr
-                            key={item.id}
-                            onClick={() => handleRowClick(item.symbol)}
-                            className="hover:bg-hover-custom cursor-pointer transition-colors duration-150 group"
-                          >
-                            {/* Timestamp */}
-                            <td className="py-4 px-6 text-muted-custom font-mono">
-                              {new Date(item.createdAt).toLocaleString()}
-                            </td>
-
-                            {/* Symbol */}
-                            <td className="py-4 px-6">
-                              <span className="font-extrabold text-foreground text-sm tracking-wider font-display uppercase">{item.symbol}</span>
-                            </td>
-
-                            {/* Trend Outlook */}
-                            <td className="py-4 px-6 text-center">
-                              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-lg capitalize ${
-                                isPositiveTrend ? 'bg-green-custom/10 text-green-custom border border-green-custom/20' :
-                                isNegativeTrend ? 'bg-red-custom/10 text-red-custom border border-red-custom/20' :
-                                'bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20'
-                              }`}>
-                                {item.trend}
-                              </span>
-                            </td>
-
-                            {/* Entry / Target / Stop Loss */}
-                            <td className="py-4 px-6 text-center font-mono font-bold text-muted-custom text-[11px]">
-                              <span className="text-foreground">{item.entryZone}</span>
-                              <span className="mx-1.5 text-border-custom">|</span>
-                              <span className="text-green-custom">{item.targetZone}</span>
-                              <span className="mx-1.5 text-border-custom">|</span>
-                              <span className="text-red-custom">{item.stopLoss}</span>
-                            </td>
-
-                            {/* Risk Rating */}
-                            <td className="py-4 px-6 text-center">
-                              <span className={`text-[10px] font-bold ${
-                                item.riskLevel === 'Low' ? 'text-green-custom' :
-                                item.riskLevel === 'High' ? 'text-red-custom' : 'text-amber-600 dark:text-amber-500'
-                              }`}>
-                                {item.riskLevel}
-                              </span>
-                            </td>
-
-                            {/* Confidence Score */}
-                            <td className="py-4 px-6 text-center">
-                              <div className="flex flex-col items-center">
-                                <span className="font-mono font-bold text-foreground text-[11px]">{item.confidenceScore}%</span>
-                                <div className="w-16 h-1 bg-hover-custom rounded-full mt-1.5 overflow-hidden">
-                                  <div 
-                                    className="h-full bg-purple-600 dark:bg-purple-500" 
-                                    style={{ width: `${item.confidenceScore}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* View Action Chevron */}
-                            <td className="py-4 px-6 text-center">
-                              <button
-                                className="p-1.5 rounded-lg bg-background group-hover:bg-green-custom text-muted-custom group-hover:text-white transition-colors cursor-pointer"
-                              >
-                                <ChevronRight className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
               </div>
             )}
           </div>
+
+          {/* Error State */}
+          {scanError && (
+            <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/80 rounded-xl text-red-800 dark:text-red-200 flex items-start gap-3">
+              <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <span className="text-xs font-bold">Scan Failed</span>
+                <p className="text-[11px] leading-relaxed mt-0.5">{scanError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Scan Results */}
+          {!loadingScan && (
+            loadingScansHistory ? (
+              <div className="bg-panel border border-border-custom rounded-2xl p-10 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 text-muted-custom animate-spin mr-2" />
+                <span className="text-xs text-muted-custom">Loading scan history...</span>
+              </div>
+            ) : scans.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="h-14 w-14 rounded-2xl bg-panel border border-border-custom flex items-center justify-center mb-4 shadow-sm">
+                  <Sparkles className="h-6 w-6 text-muted-custom" />
+                </div>
+                <h3 className="text-sm font-bold text-foreground font-display mb-1">No scans yet</h3>
+                <p className="text-xs text-muted-custom text-center max-w-xs leading-relaxed">
+                  Click "Execute Scan" above to run the institutional scanning engine and discover today's best opportunities.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                
+                {/* Scan Selector */}
+                <div className="flex items-center justify-between">
+                  <select
+                    value={activeScan?.id || ''}
+                    onChange={(e) => {
+                      const target = scans.find(s => s.id === Number(e.target.value));
+                      if (target) setActiveScan(target);
+                    }}
+                    className="px-3 py-2 bg-panel border border-border-custom rounded-xl text-xs font-semibold text-foreground focus:outline-none focus:border-purple-500 cursor-pointer"
+                  >
+                    {scans.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {new Date(s.createdAt).toLocaleString()} — Scan #{s.id}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-[10px] text-muted-custom font-semibold">{activeScanRows.length} stocks ranked</span>
+                </div>
+
+                {/* Scan Results — Card Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+                  {activeScanRows.map((row: any) => {
+                    const isBullish = row.bias === 'bullish';
+                    return (
+                      <div
+                        key={row.rank}
+                        onClick={() => handleRowClick(row.symbol)}
+                        className="bg-panel border border-border-custom rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-foreground/15 group relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                        
+                        <div className="relative z-10">
+                          {/* Rank Badge */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-bold text-muted-custom bg-background border border-border-custom px-2 py-0.5 rounded-md">
+                              #{row.rank}
+                            </span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg capitalize ${
+                              isBullish 
+                                ? 'bg-green-custom/10 text-green-custom border border-green-custom/20' 
+                                : 'bg-red-custom/10 text-red-custom border border-red-custom/20'
+                            }`}>
+                              {isBullish ? <TrendingUp className="h-3 w-3 inline mr-0.5" /> : <TrendingDown className="h-3 w-3 inline mr-0.5" />}
+                              {row.bias}
+                            </span>
+                          </div>
+
+                          {/* Symbol */}
+                          <h4 className="text-lg font-extrabold text-foreground font-display uppercase tracking-tight mb-3">{row.symbol}</h4>
+                          
+                          {/* Price Ranges */}
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-muted-custom font-semibold">Day</span>
+                              <div className="font-mono font-bold">
+                                <span className="text-red-custom">{row.dayLow}</span>
+                                <span className="text-muted-custom/50 mx-1">–</span>
+                                <span className="text-green-custom">{row.dayHigh}</span>
+                              </div>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-muted-custom font-semibold">Week</span>
+                              <div className="font-mono font-bold">
+                                <span className="text-red-custom">{row.weekLow}</span>
+                                <span className="text-muted-custom/50 mx-1">–</span>
+                                <span className="text-green-custom">{row.weekHigh}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Confidence Bar */}
+                          <div className="mb-3">
+                            <div className="flex justify-between text-[9px] mb-1">
+                              <span className="text-muted-custom font-semibold">Confidence</span>
+                              <span className="font-mono font-bold text-foreground">{row.confidence}%</span>
+                            </div>
+                            <div className="h-1.5 bg-hover-custom rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  row.confidence >= 80 ? 'bg-green-custom' : 
+                                  row.confidence >= 60 ? 'bg-purple-500' : 'bg-amber-500'
+                                }`}
+                                style={{ width: `${row.confidence}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Track Action */}
+                          <button
+                            onClick={(e) => handleTrackStock(e, row.symbol)}
+                            className="w-full py-2 bg-background hover:bg-foreground hover:text-background border border-border-custom hover:border-transparent rounded-xl text-[10px] font-bold text-muted-custom transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                          >
+                            <ArrowUpRight className="h-3 w-3" /> Track & Analyze
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      ) : (
+        /* ──────── TAB 2: Individual Ticker Reports ──────── */
+        <div className="space-y-5">
+
+          {loadingHistory ? (
+            <div className="bg-panel border border-border-custom rounded-2xl p-10 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 text-muted-custom animate-spin mr-2" />
+              <span className="text-xs text-muted-custom">Loading reports...</span>
+            </div>
+          ) : history.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="h-14 w-14 rounded-2xl bg-panel border border-border-custom flex items-center justify-center mb-4 shadow-sm">
+                <Brain className="h-6 w-6 text-muted-custom" />
+              </div>
+              <h3 className="text-sm font-bold text-foreground font-display mb-1">No reports yet</h3>
+              <p className="text-xs text-muted-custom text-center max-w-xs leading-relaxed mb-4">
+                Go to your Watchlist, select a stock, and click "Analyze" to generate AI trade reports.
+              </p>
+              <button
+                onClick={() => router.push('/stock')}
+                className="px-4 py-2 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                Go to Watchlist
+              </button>
+            </div>
+          ) : (
+            /* Report Cards */
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {history.map((item) => {
+                const isBullish = item.trend === 'bullish';
+                const isBearish = item.trend === 'bearish';
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => handleRowClick(item.symbol)}
+                    className="bg-panel border border-border-custom rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-foreground/15 group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-custom/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+
+                    <div className="relative z-10">
+                      {/* Header: Symbol + Trend */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-background border border-border-custom flex items-center justify-center font-extrabold text-[10px] text-foreground font-display">
+                            {item.symbol.slice(0, 2)}
+                          </div>
+                          <div>
+                            <span className="text-sm font-extrabold text-foreground font-display uppercase tracking-wider block">{item.symbol}</span>
+                            <span className="text-[9px] text-muted-custom font-semibold">
+                              {new Date(item.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-lg capitalize ${
+                          isBullish ? 'bg-green-custom/10 text-green-custom border border-green-custom/20' :
+                          isBearish ? 'bg-red-custom/10 text-red-custom border border-red-custom/20' :
+                          'bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20'
+                        }`}>
+                          {item.trend}
+                        </span>
+                      </div>
+
+                      {/* Strategy Zones */}
+                      <div className="grid grid-cols-3 gap-2 bg-background border border-border-custom/50 rounded-xl p-2 mb-3 text-center">
+                        <div>
+                          <span className="text-[8px] uppercase font-bold text-muted-custom block">Entry</span>
+                          <span className="text-[10px] font-mono font-bold text-foreground">{item.entryZone}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase font-bold text-muted-custom block">Target</span>
+                          <span className="text-[10px] font-mono font-bold text-green-custom">{item.targetZone}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase font-bold text-muted-custom block">Stop</span>
+                          <span className="text-[10px] font-mono font-bold text-red-custom">{item.stopLoss}</span>
+                        </div>
+                      </div>
+
+                      {/* Bottom: Risk + Confidence */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            item.riskLevel === 'Low' ? 'text-green-custom bg-green-custom/10' :
+                            item.riskLevel === 'High' ? 'text-red-custom bg-red-custom/10' : 
+                            'text-amber-600 dark:text-amber-500 bg-amber-500/10'
+                          }`}>
+                            {item.riskLevel} Risk
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-12 h-1 bg-hover-custom rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-purple-500 rounded-full"
+                              style={{ width: `${item.confidenceScore}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-foreground">{item.confidenceScore}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-
-
-      {/* Advisory Alert Card */}
-      <div className="p-4 bg-panel border border-border-custom rounded-2xl flex items-start gap-3 shadow-sm pt-4">
-        <HelpCircle className="h-5 w-5 text-muted-custom shrink-0 mt-0.5" />
-        <div className="text-xs text-muted-custom leading-relaxed">
-          <span className="text-foreground font-bold font-display">Educational Advisory</span>: All recommendations are compiled by LLMs evaluating public API data sources. They do not represent explicit financial guidance. Perform due diligence and check technical charts prior to committing cash positions.
-        </div>
+      {/* Advisory Footer */}
+      <div className="flex items-center gap-2.5 px-4 py-3 bg-panel border border-border-custom rounded-xl">
+        <Info className="h-3.5 w-3.5 text-muted-custom shrink-0" />
+        <p className="text-[10px] text-muted-custom leading-relaxed">
+          <span className="font-bold text-foreground">Advisory</span> — AI-generated recommendations are for research purposes only. Not financial advice.
+        </p>
       </div>
 
     </div>
-  );
-}
-
-function CheckCircle(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      strokeWidth={2.5} 
-      stroke="currentColor" 
-      {...props}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-}
-
-// Inline loader helper
-function Loader2(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-      />
-    </svg>
   );
 }

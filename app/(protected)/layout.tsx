@@ -29,19 +29,19 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   if (status === 'loading' || initializing) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0E14] text-white">
-        <Loader2 className="h-8 w-8 text-[#089981] animate-spin mb-4" />
-        <span className="text-sm font-medium text-[#848E9C]">Loading Terminal Session...</span>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-8 w-8 text-green-custom animate-spin mb-4" />
+        <span className="text-sm font-medium text-muted-custom">Loading Terminal Session...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#0B0E14] overflow-hidden">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <div className="flex-1 overflow-hidden flex h-full bg-[#0B0E14]">
+        <div className="flex-1 overflow-hidden flex h-full bg-background">
           {children}
         </div>
       </div>
